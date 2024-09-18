@@ -200,6 +200,12 @@ const App = () => {
 
 ```
 
+### Three rules of hooks
+
+* Only use hooks (useState, useEffect) in a _functional_ componenent or in a custom hook, but not in a _class-component_!
+* Only on the top level of the component function or custom hook, not in a helper function!
+* Never call hooks conditionally!
+
 ### useEffect hook for fetching data initially and adding or removing event listeners
 
 Provide empty deps array as 2nd parameter to only fetch initially and not on every change.
