@@ -1,8 +1,25 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 
 export default function Demo() {
   const [text1, setText1] = useState("First");
   const [text2, setText2] = useState("Last");
+
+  useEffect(() => {
+      console.log('mount?');
+
+      return () => {
+          console.log('unmount?');
+      }
+  }, []); // Only mount/unmount handler if empty deps array
+
+  useEffect(() => {
+      console.log('text1', text1);
+      console.log('text2', text2);
+
+      return () => {
+        console.log('cleanup called after every change');
+      };
+  }, [text1, text2]);
 
   return (
     <div className="container">
