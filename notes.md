@@ -247,6 +247,12 @@ useEffect(() => {
 
 ### useRef hook as element reference
 
+Refs are useful for:
+* element reference
+* to preserve unrendered state between renders like previous value
+
+Example for an element reference:
+
 ```js
 
 const incBtnRef = useRef(null);
@@ -255,9 +261,9 @@ return (
         <> {/* empty container */}
          ...
           <button className="btn" 
-                  ref={incBtnRef} 
+                  ref={incBtnRef} // setting the element reference with ref attribute
                   onClick={() => {
-                      const val = incBtnRef.current.value; // current is html element
+                      const val = incBtnRef.current.value; // reading from ref - current is html element
                       
                   }}>
             Increment
@@ -266,9 +272,43 @@ return (
 );
 ```
 
-Refs are useful for:
-* element reference
-* to preserve unrendered state between renders like previous value
+Another example that changes the element's style. Also a counter that does not cause rerender:
+
+````jsx
+import { useRef, useState } from "react";
+export default function Demo() {
+
+  // case #1 reference DOM
+  const imgRef = useRef();
+  // case #2 reference value that does not cause re-render
+  const mouseOverCnt = useRef(0);
+  const [cnt, setCnt] = useState(0);
+  return (
+    <div className="container">
+      <img src="/images/Speaker-1124.jpg"
+        ref={imgRef}
+        style={{ filter: "grayscale(100%)" }}
+        onMouseOver={() => {
+          imgRef.current.style.filter = "grayscale(0%)";setCnt(cnt+1)
+          mouseOverCnt.current++;
+        }}
+        onMouseOut={() => {
+          imgRef.current.style.filter = "grayscale(100%)";
+        }}
+      />
+      <hr />
+      <button
+        onClick={() => {
+          alert("Registered! mouseOverCnt:" + mouseOverCnt.current);
+        }}
+      >
+        Register
+      </button>
+    </div>
+  );
+}
+
+````
 
 ### Custom hook for api calls and loadingState
 
