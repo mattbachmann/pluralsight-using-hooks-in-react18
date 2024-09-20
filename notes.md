@@ -229,6 +229,22 @@ useEffect(() => {
 }, []); // Only fetch initially, by providing empty deps []
 ```
 
+Another example logging every change of a state variable:
+
+```jsx
+const [text1, setText1] = useState("First");
+const [text2, setText2] = useState("Last");
+
+useEffect(() => {
+    console.log('text1', text1);
+    console.log('text2', text2);
+
+    return () => {
+        console.log('cleanup called after every change');
+    };
+}, [text1, text2]);
+```
+
 ### useRef hook as element reference
 
 ```js
