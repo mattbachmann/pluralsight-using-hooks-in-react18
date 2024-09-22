@@ -19,7 +19,7 @@ export default function Demo() {
       return () => {
           console.log('unmount?');
       }
-  }, []); // Only mount/unmount handler if empty deps array
+  }, []); // Only mount/unmount handler if empty deps array, called after first render
 
   return (
     <div className="container">
