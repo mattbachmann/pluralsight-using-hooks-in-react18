@@ -1386,10 +1386,16 @@ ReactDOM.render(
   </ErrorBoundary>,
   document.getElementById("root")
 );
-
 ````
 
+The context reference will force the component to rerender on any context change.
+
+**So don't wrap your App component with a ContextProvider, unless you really have too!**
+
+But better move it down the hierarchy.
+
 Finally `useCart` can be called in `Cart.jsx`:
+
 ````jsx
 import React from "react";
 import useFetchAll from "./services/useFetchAll";
@@ -1402,8 +1408,8 @@ export default function Cart() {
   const navigate = useNavigate();
   const urls = cart.map((i) => `products/${i.id}`); // access cart
   const { data: products, loading, error } = useFetchAll(urls);
-
 ````
+
 
 ## 3rd Party Libraries for State management
 
