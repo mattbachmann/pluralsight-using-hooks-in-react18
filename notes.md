@@ -336,14 +336,14 @@ const useGetRequest = (url) => {
     } catch {
       setLoadingState(loadingStatus.hasErrored);
     }
-  }, [url]);
+  }, [url]); 
   return { get, loadingState };
 };
 
 export default useGetRequest;
 ```
 
-Every usage of a custom hook creates an isolated instance. When using `useGetRequest` the `get` method must be put into the deps array.
+Every usage of a custom hook creates an isolated instance. When using `useGetRequest` in `useEffect` the `get` method must be put into the deps array.
 Therefore `useGetRequest` has the useCallback hook in it, to avoid an endless fetching loop.
 
 ```jsx
@@ -662,6 +662,14 @@ If error state variable is set, then throw error instead returning jsx:
 
 ## Rendering performance optimization
 
+In React when a parent component changes, all it's child components are also rerendered.
+
+To improve performance for large data sets can use:
+* `memo()` to cache pure function components unless their props values change
+* `useMemo` hook to cache calculations between renders
+* `useCallback` to cache function definitions between renders
+* `useDeferredValue` for debouncing user input values
+
 ### React.memo
 
 For rendering pure components, where the appearance only depends on their props values.
@@ -699,6 +707,96 @@ export default memo(ToDo, (prevProps, nextProps) => {
           nextProps.idUpdating === nextProps.todoItem.id
   );
 });
+````
+
+### useMemo
+
+`useMemo` hook to cache pure calculation functions between renders.
+
+Pure means cannot use context or state inside those functions - the output must only depend on input params.
+
+Example with a filter and sort hook `useSpeakerSortAndFilter.js` which is pure:
+
+````jsx 
+export default function useSpeakerSortAndFilter(
+  speakerList,
+  speakingSaturday,
+  speakingSunday,
+  searchText
+) {
+  console.log("useSpeakerSortAndFilter called");
+  return speakerList
+    ? speakerList
+        .filter(
+          ({ sat, sun }) => (speakingSaturday && sat) || (speakingSunday && sun)
+        )
+        .filter(({ firstName, lastName }) => {
+          return (
+            searchText.length === 0 ||
+            (firstName?.toLowerCase() + lastName?.toLowerCase()).includes(
+              searchText.toLowerCase()
+            )
+          );
+        })
+        .sort(function (a, b) {
+          if (a.firstName < b.firstName) {
+            return -1;
+          }
+          if (a.firstName > b.firstName) {
+            return 1;
+          }
+          return 0;
+        })
+    : [];
+}
+````
+
+Then can use `useMemo` in the calling component `SpeakersList.js`:
+
+````jsx
+export default function SpeakersList() {
+    const { speakerList, loadingStatus } =
+        useContext(SpeakersDataContext);
+    const { speakingSaturday, speakingSunday, searchText } =
+        useContext(SpeakerMenuContext);
+    const speakerListJson = JSON.stringify(speakerList);
+    const speakerListFiltered = useMemo( // call with anonymous function as 1st param
+        () =>
+            useSpeakerSortAndFilter(
+                speakerList,
+                speakingSaturday,
+                speakingSunday,
+                searchText
+            ),
+        [speakingSaturday, speakingSunday, searchText, // useMemo deps as 2nd param
+            loadingStatus, speakerListJson], // speakerListJson needed so changes to speakers array are detected
+    );
+    ...
+````
+
+The speakerListJson is needed so changes to speakers array are detected. Ideally always provide new array when an entry changes. 
+
+### useCallback
+
+If a parent component changes that can mean that it's functions also get redefined. 
+
+And when the function is passed to a child component, then the child needs to rerender - even when using `memo()`.
+
+Therefore the function can be wrapped inside `useCallback` to keep it from getting redefined:
+
+````jsx
+ return (
+    <SpeakerLine
+        key={speakerRec.id}
+        speakerRec={speakerRec}
+        updating={updatingId === speakerRec.id ? updatingId : 0}
+        toggleFavoriteSpeaker={useCallback( // useCallback
+            () => toggleFavoriteSpeaker(speakerRec),
+            [speakerRec.favorite] // useCallback deps
+        )}
+        highlight={highlight}
+    />
+);
 ````
 
 ### Debouncing / useDeferredValue
