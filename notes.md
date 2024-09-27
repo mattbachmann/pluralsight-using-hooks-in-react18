@@ -799,15 +799,15 @@ Therefore the function can be wrapped inside `useCallback` to keep it from getti
 );
 ````
 
-### Debouncing / useDeferredValue
+### useDeferredValue (Debouncing)
 
 If lots of search terms slow down the typing in search input, then can `useDeferredValue` for search term state to keep the input responsive.
-Only needed for hundreds or thousands of list items.
+Only needed for hundreds or thousands of list items. Works like debouncing.
 
 ```jsx
 const App = () => {
   const [searchText, setSearchText] = useState("");
-  const searchTextDeferred = useDeferredValue(searchText);
+  const searchTextDeferred = useDeferredValue(searchText, { timeoutMs: 1000 });
 
   return (
           <TodosDataProvider>
@@ -823,14 +823,16 @@ const App = () => {
 export default App;
 ```
 
-### Prioritizing updates / useTransition
+### useTransition (deprioritizing long-running tasks while showing progress)
 
-Can use `startTransition` to mark low priority updates for long-running tasks such as search.
+Alternatively can use `useTransition`to get `isPending` and `startTransition` to debounce and show progress. 
+Then wrap call to low prio state-setter `setSearch` in `startTransition` to delay the update of the `search` text send to backend.
+Use a different state hook for hi prio state like the visible `currentSearch` input text.
 
 ```jsx
 function App() {
-  const [search, setSearch] = useState(""); // state used for search process
-  const [searchHighPriority, setSearchHighPriority] = useState(""); // hi prio state for search text
+  const [search, setSearch] = useState(""); // state used for long running search task
+  const [currentSearch, setCurrentSearch] = useState(""); // hi prio state for the current search text displayed in input
   const [isPending, startTransition] = useTransition(); // call startTransition to mark low prio task, isPending can be used for spinner
   const [todoList, setTodoList] = useState([
     "clean dog", "eat lunch", "wash clothes", "...",
@@ -839,13 +841,14 @@ function App() {
   return (
           <div>
             <input
-                    value={searchHighPriority}
+                    value={currentSearch}
                     onChange={(e) => {
-                      setSearchHighPriority(e.target.value); // search text value is responsive
-                      startTransition(() => setSearch(e.target.value)); // search results will be delayed
+                      setCurrentSearch(e.target.value); // visible current search text is responsive
+                      startTransition(() => setSearch(e.target.value)); // text used for long running search task is delayed
                     }}
             />
-            <ShowTodoList todoList={todoList} deferredSearch={search} />
+              {isPending ? "refreshing..." : ""}  {/* Progress indicator */}
+              <ShowTodoList todoList={todoList} deferredSearch={search} />
           </div>
   );
 }
